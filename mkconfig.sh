@@ -8,6 +8,7 @@ function create_client_config {
   client_config_file="${1}.conf"
   allowed_ips="${2}"
   echo "Creating client config ${client_config_file} with allowed ips: ${allowed_ips}"
+  # TODO make server public key configurable as command line arg
   cat > "${client_config_file}" <<EOF
 [Interface]
 Address = ${ip}/32

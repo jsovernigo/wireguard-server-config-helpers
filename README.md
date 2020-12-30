@@ -29,6 +29,8 @@ sudo systemctl enable wg-quick@wg0
 
 ## Create client configs
 
+- Change the server "PublicKey" in `mkconfig.sh:create_client_config` (near line 19) to be the publickey
+    of your wireguard server.
 - Use mkconfig tool on server to make client configs. It will add them to the running server.
 - Distribute the `<name>.conf` and `<name>all.conf` configs to clients.
 - Keep keys secret.
