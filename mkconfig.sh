@@ -1,35 +1,38 @@
-#!/usr/bin/bash -e
-
-set -x
+#!/bin/bash
 
 function usage () {
-  echo "${0} <wginterface> <name> <ip>"
+  echo "${0} <wginterface> <host> <name> <ip> <port>"
 }
 
 function create_client_config () {
   allowed_ips="${2}"
   echo "Creating client config ${client_config_file} with allowed ips: ${allowed_ips}"
-  envsubst < 'templates/client.conf.template' > "${client_config_file}"
+  export clientip=${clientip}
+  export private=${private}
+  export serverpubkey=${server_public}
+  export host=${host}
+  export allowed_ips=${allowed_ips}
+  envsubst < 'templates/client.conf.template' > "${name}/${client_config_file}"
 }
 
 # set variables for the script
 wginterface="${1}"
-name="${2}"
-ip="${3}"
+host="${2}"
+name="${3}"
+clientip="${4}"
+port="${5}"
 
 client_config_file="${name}.conf"
 server_config_file="server.conf"
-server_public=$(cat publickey)
+server_public=$(cat public)
 
 # ensure cli arguments exist
-if [[ -z "${name}" ]] || [[ -z "${ip}" ]] || [[-z "${wginterface}"]]; then
+if test -z "${name}" || test -z "${host}" || test -z "${clientip}" || test -z "${wginterface}" || test -z "${port}" ; then
   usage
   exit 1
 fi
 
-# move to client directory.
 mkdir "${name}"
-pushd "${name}"
 
 echo "Creating keys"
 
@@ -39,11 +42,13 @@ echo "old umask is ${o_umask}"
 umask 077
 
 # create client keys and generate config
-wg genkey | tee private | wg pubkey > public
-private=$(<private)
-public=$(<public)
+wg genkey | tee ${name}/private | wg pubkey > ${name}/public
+private=$(<${name}/private)
+public=$(<${name}/public)
 
-create_client_config "${name}" "${serveraddr}"
+server_addr=$(cat wg0.conf | grep "Address=" | sed s/Address=//g | sed 's![0-9]*/[0-9]*!0/24!g')
+
+create_client_config "${name}" "${server_addr}" "${serveraddr}"
 
 # reset old mask
 umask "${o_umask}"
@@ -52,11 +57,9 @@ echo "Creating server config ${server_config_file}"
 cat > "${server_config_file}" <<EOF
 [Peer]
 PublicKey = ${public}
-AllowedIPs = ${ip}/32
+AllowedIPs = ${clientip}/32
 EOF
 
 # add new confg file
 echo "Adding server config to interface ${wginterface}"
-sudo wg addconf "${wginterface}" "${server_config_file}"
-
-popd
+wg addconf "${wginterface}" "${server_config_file}"
