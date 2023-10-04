@@ -1,23 +1,19 @@
 # Setup
 
-## Make server keys
+## Installation
 
 ```
 sudo su
 cd /etc/wireguard
-umask 077
-wg genkey | tee privatekey | wg pubkey > publickey
+git clone git@github.com:jsovernigo/wireguard-server-config-helpers && mv wireguard-server-config-helpers/* ./
 ```
 
-## Make base server config
-
-- Check to make sure the interface (eg eth0) is correct in the iptables rules in the template.
+## Generate Server Config
 
 ```
 sudo su
-cp wg0.conf.template /etc/wireguard/wg0.conf
-# Add the private key to /etc/wireguard/wg0.conf
-vim /etc/wireguard/wg0.conf
+cd /etc/wireguard
+./mkserver.sh <interface> <server ip> <port>
 ```
 
 ## Start/enable server
@@ -28,12 +24,13 @@ sudo systemctl enable wg-quick@wg0
 ```
 
 ## Create client configs
+Note that the server should be running when you run ./mkconfig.sh
 
-- Change the server "PublicKey" in `mkconfig.sh:create_client_config` (near line 19) to be the publickey
-    of your wireguard server.
-- Use mkconfig tool on server to make client configs. It will add them to the running server.
-- Distribute the `<name>.conf` and `<name>all.conf` configs to clients.
-- Keep keys secret.
+```
+sudo su
+cd /etc/wireguard
+./mkconfig.sh <wginterface> <host> <name> <ip> <port>
+```
 
 # View status
 
