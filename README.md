@@ -29,8 +29,10 @@ Note that the server should be running when you run ./mkconfig.sh
 ```
 sudo su
 cd /etc/wireguard
-./mkconfig.sh <wginterface> <host> <name> <ip> <port>
+./mkconfig.sh <wginterface> <server host> <name> <ip> <port>
 ```
+
+Note that "server host" just refers to any reachable IP or resolvable url name where the server is hosted, e.g., vpn.mysite.com
 
 # View status
 
